@@ -4,7 +4,7 @@ const state = {
   lastLoadedAt: null,
   source: "未取得",
   studentTags: {
-    course: "SNS",
+    course: "",
     goal: "副業",
     primaryStyle: "伴走型",
     secondaryStyle: "共感支援型",
@@ -152,7 +152,7 @@ function toCsvExportUrl(input) {
 
 function applyExtraction(data) {
   state.studentTags = {
-    course: data.course || "SNS",
+    course: data.course || "",
     goal: data.goal || "副業",
     primaryStyle: data.primaryStyle || "伴走型",
     secondaryStyle: data.secondaryStyle || "共感支援型",
@@ -164,13 +164,7 @@ function applyExtraction(data) {
 
 function autoTagStudentText() {
   const notes = document.getElementById("studentNotes").value;
-  const lower = notes.toLowerCase();
-  const course = /sns|インスタ|instagram|マーケ/.test(lower) ? "SNS"
-    : /デザイン|canva|lp|バナー/.test(lower) ? "Design"
-    : /ライティング|記事|文章/.test(lower) ? "Writing"
-    : /動画|映像|youtube/.test(lower) ? "Movie"
-    : /web|サイト|pc/.test(lower) ? "Web"
-    : document.getElementById("studentCourse").value;
+  const course = document.getElementById("studentCourse").value;
 
   const goal = /副業|収入|月収|稼ぎ|案件/.test(notes) ? "副業"
     : /転職/.test(notes) ? "転職"
@@ -495,6 +489,10 @@ function runMatching() {
   }
   autoTagStudentText();
   const student = getStudent();
+  if (!student.course) {
+    document.getElementById("results").innerHTML = `<div class="status">受講コースを選択してください。</div>`;
+    return;
+  }
   const allScored = state.coaches.map((coach) => scoreCoach(student, coach));
   const scored = allScored
     .filter((item) => !item.excluded)
@@ -566,16 +564,18 @@ function scoreCoach(student, coach) {
 }
 
 function courseMatches(course, tags) {
-  const text = String(tags || "").toLowerCase();
-  if (!text) return true;
+  const text = String(tags || "").normalize("NFKC").toLowerCase();
+  if (!course) return true;
+  if (!text) return false;
   const aliases = {
     SNS: ["sns", "📱sns", "instagram", "インスタ"],
-    Design: ["design", "デザイン", "🎨"],
+    Design: ["design", "デザイン", "webデザイン", "web design", "webdesign", "バナー", "lp", "canva", "figma", "🎨"],
+    WebDesign: ["webデザイン", "web design", "webdesign", "デザイン", "バナー", "lp", "canva", "figma"],
     Writing: ["writing", "ライティング", "🖋"],
     Movie: ["movie", "映像", "動画", "🎥"],
-    Web: ["web", "サイト", "pc"],
+    Web: ["web", "サイト", "pc", "ホームページ", "wordpress", "html", "css"],
   };
-  return (aliases[course] || [course]).some((key) => text.includes(String(key).toLowerCase()));
+  return (aliases[course] || [course]).some((key) => text.includes(String(key).normalize("NFKC").toLowerCase()));
 }
 
 function scoreStyle(student, coach) {
@@ -755,7 +755,19 @@ function renderStudentInference(student) {
   const summary = document.getElementById("summary");
   const current = summary.textContent;
   const risks = student.risks.length ? student.risks.join("、") : "特になし";
-  summary.textContent = `${current}\n\n内部判定：\n- 受講コース：${student.course}\n- 主目的：${student.goal}\n- 推定タイプ：${student.primaryStyle} / ${student.secondaryStyle}\n- 主な離脱リスク：${risks}`;
+  summary.textContent = `${current}\n\n内部判定：\n- 受講コース：${displayCourse(student.course)}\n- 主目的：${student.goal}\n- 推定タイプ：${student.primaryStyle} / ${student.secondaryStyle}\n- 主な離脱リスク：${risks}`;
+}
+
+function displayCourse(course) {
+  const labels = {
+    SNS: "SNS",
+    WebDesign: "WEBデザイン",
+    Web: "Web制作",
+    Writing: "ライティング",
+    Movie: "動画",
+    Design: "デザイン",
+  };
+  return labels[course] || course || "未判定";
 }
 
 function renderResults(items, allScored = []) {
