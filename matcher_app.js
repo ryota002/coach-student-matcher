@@ -289,7 +289,7 @@ function normalizeCoach(raw) {
     capacity_unknown: !hasCapacityData,
     energy_level: toNumber(raw.energy_level, 4),
     coach_rank: normalizeRankLabel(raw.coach_rank),
-    rank_score: normalizeRankScore(raw.coach_rank),
+    rank_score: hasValue(raw.coach_rank) ? normalizeRankScore(raw.coach_rank) : normalizeRankScore("B"),
     rank_unknown: !hasValue(raw.coach_rank),
     customer_success_rate: normalizeRate(raw.customer_success_rate),
     customer_success_unknown: !hasValue(raw.customer_success_rate),
@@ -448,7 +448,7 @@ function normalizeRankScore(value) {
 }
 
 function displayRank(coach) {
-  return coach.rank_unknown ? "未入力" : coach.coach_rank;
+  return coach.rank_unknown ? "未入力（B相当）" : coach.coach_rank;
 }
 
 function cleanName(value) {
@@ -627,7 +627,6 @@ function scoreContext(student, coach) {
 }
 
 function scoreRank(coach) {
-  if (coach.rank_unknown) return 10;
   return round(coach.rank_score);
 }
 
@@ -647,7 +646,7 @@ function buildReasons(student, coach, scores) {
     positives.push("経歴・強み情報が少ないため、主にタイプ相性と成績指標で暫定評価");
   }
   if (styles) positives.push(`${styles}として、受講生の推奨タイプと近い`);
-  if (coach.rank_unknown) positives.push("ランクが未入力のため、実績評価は暫定");
+  if (coach.rank_unknown) positives.push("ランクが未入力のため、Bランク相当で評価");
   else if (scores.rank >= 20) positives.push(`DBランクが高い（${displayRank(coach)}）`);
   if (coach.on_time_unknown) positives.push("オンタイム率が未入力のため、期限遵守評価は暫定");
   else if (scores.ontime >= 24) positives.push(`オンタイム率が安定している（${displayRate(coach.on_time_rate, false)}）`);
@@ -792,13 +791,27 @@ function renderOtherCandidates(items) {
       <h3>4位以降の候補</h3>
       <ol>
         ${items.map((item, index) => `
-          <li>
+          <li tabindex="0">
             <span>${index + 4}. ${escapeHtml(item.coach.name)}</span>
             <strong>${item.total}点</strong>
+            ${renderOtherBreakdown(item)}
           </li>
         `).join("")}
       </ol>
     </section>
+  `;
+}
+
+function renderOtherBreakdown(item) {
+  const b = item.breakdown;
+  const coach = item.coach;
+  const matchScore = round(b.style + b.dropout + b.goal + b.context);
+  return `
+    <div class="other-breakdown">
+      <div>相性：${matchScore} / 45</div>
+      <div>オンタイム率：${round(b.ontime)} / 30（${displayRate(coach.on_time_rate, coach.on_time_unknown)}）</div>
+      <div>ランク：${round(b.rank)} / 25（${escapeHtml(displayRank(coach))}）</div>
+    </div>
   `;
 }
 
