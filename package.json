@@ -1,0 +1,8 @@
+{
+  "name": "coach-student-matcher",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node local_server.js"
+  }
+}

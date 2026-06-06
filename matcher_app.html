@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>コーチ・受講生マッチングMVP</title>
+  <link rel="stylesheet" href="matcher_styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Coach Matching MVP</p>
+      <h1>コーチ・受講生マッチング</h1>
+    </div>
+    <div class="score-rule">
+      <span>相性診断 45点</span>
+      <span>オンタイム率 30点</span>
+      <span>ランク 25点</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="panel-title">
+        <h2>1. 受講生情報</h2>
+        <p>カウンセリング内容や文字起こしを貼り付けて、タグ化します。</p>
+      </div>
+
+      <label>受講生情報テキスト
+        <textarea id="studentNotes" rows="7" placeholder="ここに受講生の情報を入れてください"></textarea>
+      </label>
+
+      <div class="actions">
+        <span class="helper-text">タグ化は内部処理で行い、推薦結果に反映します。</span>
+      </div>
+
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <h2>2. コーチDB</h2>
+        <p>登録済みの統合シートから、成績・キャパ・経験・資格・強みまで取得します。</p>
+      </div>
+
+      <div class="actions">
+        <button id="loadSheetsBtn">最新DBを再取得</button>
+      </div>
+
+      <div id="loadStatus" class="status">起動時に自動取得します</div>
+    </section>
+
+    <section class="panel wide">
+      <div class="panel-title row">
+        <div>
+          <h2>3. 推薦結果</h2>
+          <p>候補はスプレッドシートの最新値をもとに計算します。</p>
+        </div>
+        <button id="matchBtn">マッチング実行</button>
+      </div>
+
+      <div id="summary" class="summary"></div>
+      <div id="results" class="results"></div>
+    </section>
+  </main>
+
+  <script src="matcher_app.js"></script>
+</body>
+</html>
